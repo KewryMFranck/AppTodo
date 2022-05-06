@@ -68,41 +68,38 @@ this.salvaLocalStorage();
 }
 salvaLocalStorage(){
   localStorage.setItem('tarefaUsuario', JSON.stringify(this.tarefas));
+ 
+ let tarefaSalva = localStorage.getItem( 'tarefaUsuario');
+
+if (tarefaSalva != null) {
+  this.tarefas = JSON.parse(tarefaSalva);}
 }
-async realizaAcoes(tarefa: any){
+async realizaAcoes(tarefa: any) {
   const actionSheet = await this.actionSheetCrtl.create({
   header: 'Qual ação realizar?',
   buttons: [{
     text: tarefa.realizada ? ' Desmarcar' : 'Marcar',
     icon: tarefa.realizada ? 'checkmar-circle' : 'radio-button-off-outline',
     handler: () => {
-      tarefa.realizada = ! tarefa.realizada;
+      tarefa.realizada = !tarefa.realizada;
       this.salvaLocalStorage();
-      
-    
-    let tarefaSalva = localStorage.getItem( 'tarefaUsuario');
+    }
+  },    {
+      text: 'cancelar',
+      icon: ' close',
+      role: 'cancel',
+      handler: () => {
+        console.log('Cancel clicked');
+      }
+    }]
+  }); 
+    await actionSheet.present();
 
-    if (tarefaSalva != null){
-      this.tarefas = JSON.parse(tarefaSalva);}
-    
+    const { role,data } = await actionSheet.onDidDismiss();
   }
+
   excluirTarefa( tarefa: any){
-    this.tarefas = this.tarefas.filter(arrayTarefa => != arrayTarefa);
+    this.tarefas = this.tarefas.filter(arrayTarefa => tarefa != arrayTarefa);
     
     this.salvaLocalStorage();
-  }
-},
-  {
-    text: 'cancelar',
-    icon: ' close',
-    role: 'cancel',
-    handler: () => {
-      console.log('Cancel clicked');
-    }
-  }]
-  }); 
-  await actionSheet.present();
-  const { role,data } = await actionSheet.onDidDismiss();
-    }
-  }
- 
+  }}
