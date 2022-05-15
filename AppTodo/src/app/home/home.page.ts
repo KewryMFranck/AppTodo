@@ -10,6 +10,7 @@ export class HomePage {
 
 //
 tarefas: any[] = [];
+  todoService: any;
  
   constructor(private alertCrtl: AlertController, private toastCtrl: ToastController,private actionSheetCrtl: ActionSheetController)   {}
 
@@ -60,11 +61,17 @@ return;
   }
 
   //
-const tarefa = { nome:novaTarefa, realizada: false };
+const tarefa = { nome:novaTarefa, realizada: 0 };
 //
 this.tarefas.push(tarefa);
 this.salvaLocalStorage();
-
+this.todoService.adicionaTarefa(tarefa.nome, tarefa.realizada )
+  .then((resposta)=>{
+    console.log(resposta);
+  })
+  .catch((erro)=>{
+    console.error(erro);
+  });
 }
 salvaLocalStorage(){
   localStorage.setItem('tarefaUsuario', JSON.stringify(this.tarefas));
