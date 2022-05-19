@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { ActionSheetController, AlertController, ToastController } from '@ionic/angular';
+import { identity } from 'rxjs';
 
 @Component({
   selector: 'app-home',
@@ -7,106 +8,63 @@ import { ActionSheetController, AlertController, ToastController } from '@ionic/
   styleUrls: ['home.page.scss'],
 })
 export class HomePage {
-
-//
 tarefas: any[] = [];
   todoService: any;
+  http: any;
  
-  constructor(private alertCrtl: AlertController, private toastCtrl: ToastController,private actionSheetCrtl: ActionSheetController)   {}
+constructor(private alertCrtl: AlertController,
+  private toastCtrl: ToastController,
+  private actionSheetCrtl: ActionSheetController,
+  private todoService: TodoService) {
 
-     async showAdd(){
-       const alert = await this.alertCrtl.create({
-          cssClass: 'my-custom-class',
-          header: 'o que você deseja fazer?',
-          inputs: [
-            {
-              name:'tarefa1',
-              type:'text',
-              placeholder: 'Digite o que deseja fazer.',
-           },
-          ],
-          buttons:[
-            {
-              text:'Cancelar',
-              role:'cancel',
-              cssClass:'secondary',
-              handler:()=> {
-                console.log('cancelado com sucesso!');
-              },
-            },
-            {
-              text: 'Adicionar',
-              handler:(form) => {
-                this.adicionaTarefa(form.tarefa1); 
-            
-              },
-            },
-          ],
-       });
+    this.carregarTarefa();
 
-       await alert.present();
-
-}
-//
-async adicionaTarefa(novaTarefa: string){
-  if(novaTarefa.trim().length < 1) {
-    const toast = await this.toastCtrl.create({
-      message: 'Por favor, digite a tarefa!',
-      duration: 2000,
-      position: 'top',
-      
-    });
-toast.present();
-return;
-  }
-
-  //
-const tarefa = { nome:novaTarefa, realizada: 0 };
+  
+const tarefa = { nome: novaTarefa, realizada: 0 };
 //
 this.tarefas.push(tarefa);
-this.salvaLocalStorage();
 this.todoService.adicionaTarefa(tarefa.nome, tarefa.realizada )
-  .then((resposta)=>{
-    console.log(resposta);
+  .then( async(resposta)=>{
+    const toast = await this.toastCtrl.create({
+      message: 'Operação Realizada com Sucesso',
+      duration: 2000,
+      position: 'top'
+    });
+    toast.present();
+
   })
-  .catch((erro)=>{
-    console.error(erro);
-  });
+  .catch(async(erro)=>{
+    const toast = await this.toastCtrl.create({
+      message: 'Erro ao realizar operação',
+      duration: 2000,
+      position: 'top'
+    });
+    toast.present();  });
+
 }
+  carregarTarefa() {
+    this.todoService.listaTarefa()
+      .then( async(resposta: any[])=>{
+        console.table(resposta);
+        this.tarefas =resposta;
+      })
+      .catch(async(erro)=>{
+        const toast =await this.toastCtrl.create({
+          message: 'Erro ao realizar operação',
+          duration: 2000,
+          position: 'top'
+        });
+        toast.present();  });
+
+   }
+
 salvaLocalStorage(){
   localStorage.setItem('tarefaUsuario', JSON.stringify(this.tarefas));
- 
- let tarefaSalva = localStorage.getItem( 'tarefaUsuario');
-
-if (tarefaSalva != null) {
-  this.tarefas = JSON.parse(tarefaSalva);}
 }
-async realizaAcoes(tarefa: any) {
-  const actionSheet = await this.actionSheetCrtl.create({
-  header: 'Qual ação realizar?',
-  buttons: [{
-    text: tarefa.realizada ? ' Desmarcar' : 'Marcar',
-    icon: tarefa.realizada ? 'checkmar-circle' : 'radio-button-off-outline',
-    handler: () => {
-      tarefa.realizada = !tarefa.realizada;
-      this.salvaLocalStorage();
-    }
-  },    {
-      text: 'cancelar',
-      icon: ' close',
-      role: 'cancel',
-      handler: () => {
-        console.log('Cancel clicked');
-      }
-    }]
-  }); 
-    await actionSheet.present();
+  excluirTarefa(id: any){
+    const url = 'http://localhost/Api.php?id='+id;
 
-    const { role,data } = await actionSheet.onDidDismiss();
+    return this.http.delete(url).toPromise();
   }
 
-  excluirTarefa( tarefa: any){
-    this.tarefas = this.tarefas.filter(arrayTarefa => tarefa != arrayTarefa);
-    
-    this.salvaLocalStorage();
-  }}
+}
